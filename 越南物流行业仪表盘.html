@@ -1,0 +1,784 @@
+
+    <!DOCTYPE html>
+    <html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>越南物流行业仪表盘</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <style>
+            :root {
+                --primary-color: #2c3e50;
+                --secondary-color: #3498db;
+                --success-color: #27ae60;
+                --warning-color: #f39c12;
+                --danger-color: #e74c3c;
+                --light-bg: #ffffff;
+                --dark-text: #2c3e50;
+            }
+            
+            body {
+                background-color: var(--light-bg);
+                color: var(--dark-text);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+            }
+            
+            .dashboard-header {
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                padding: 2.5rem 0;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+            
+            .dashboard-header .lead {
+                font-size: 1.2rem;
+                max-width: 800px;
+                margin: 0 auto;
+                opacity: 0.9;
+            }
+            
+            .card {
+                background-color: var(--light-bg);
+                border: 1px solid #e1e8ed;
+                border-radius: 12px;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            
+            .card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            }
+            
+            .card-header {
+                background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+                color: white;
+                font-weight: 600;
+                font-size: 1.1rem;
+                border-radius: 12px 12px 0 0 !important;
+                padding: 1rem 1.5rem;
+                border: none;
+            }
+            
+            .card-body {
+                padding: 1.5rem;
+            }
+            
+            .kpi-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 15px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+            
+            .kpi-value {
+                font-size: 2.2rem;
+                font-weight: 700;
+                margin: 0.5rem 0;
+                color: white;
+            }
+            
+            .kpi-target {
+                font-size: 0.9rem;
+                opacity: 0.8;
+                margin: 0;
+            }
+            
+            .kpi-growth {
+                font-size: 1rem;
+                font-weight: 600;
+                margin: 0;
+            }
+            
+            .table {
+                color: var(--dark-text);
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            }
+            
+            .table thead th {
+                background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                border: none;
+                font-weight: 600;
+                padding: 1rem;
+            }
+            
+            .table tbody tr:hover {
+                background-color: #f8f9fa;
+                transform: scale(1.01);
+                transition: all 0.2s ease;
+            }
+            
+            .btn-primary {
+                background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+                border: none;
+                border-radius: 25px;
+                padding: 0.75rem 1.5rem;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+            
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+            }
+            
+            .form-control {
+                border-radius: 25px;
+                border: 2px solid #e1e8ed;
+                padding: 0.75rem 1.5rem;
+                transition: all 0.3s ease;
+            }
+            
+            .form-control:focus {
+                border-color: var(--secondary-color);
+                box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            }
+            
+            .plotly-graph-div {
+                margin: auto;
+                border-radius: 8px;
+            }
+            
+            .industry-overview {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+                border-radius: 15px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .industry-overview h3 {
+                color: white;
+                margin-bottom: 1rem;
+            }
+            
+            .trend-card {
+                background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                border: none;
+                border-radius: 15px;
+            }
+            
+            .challenge-card {
+                background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+                border: none;
+                border-radius: 15px;
+            }
+            
+            .section-divider {
+                height: 3px;
+                background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+                border: none;
+                border-radius: 2px;
+                margin: 2rem 0;
+            }
+            
+            @media (max-width: 768px) {
+                .dashboard-header h1 {
+                    font-size: 2rem;
+                }
+                
+                .dashboard-header .lead {
+                    font-size: 1rem;
+                }
+                
+                .kpi-value {
+                    font-size: 1.8rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="dashboard-header">
+            <div class="container">
+                <h1><i class="fas fa-shipping-fast"></i> 越南物流行业仪表盘</h1>
+                <p class="lead">
+                    越南物流行业是国家经济增长的关键驱动力，近年来经历了快速发展。本仪表盘全面展示行业概况、主要参与者、技术创新及未来发展趋势，为投资决策和战略规划提供数据支撑。
+                </p>
+            </div>
+        </div>
+
+        <div class="container-fluid mt-4">
+            <!-- KPI指标卡片 -->
+            <div class="row mb-4">
+                
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">物流总成本占GDP比重</h5>
+                    <h3 class="kpi-value">15.2</h3>
+                    <p class="kpi-target">目标: 12.0</p>
+                    <p class="kpi-growth" style="color: #dc3545">
+                        ↘ 8.5%
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">平均配送时效</h5>
+                    <h3 class="kpi-value">20.5</h3>
+                    <p class="kpi-target">目标: 18.0</p>
+                    <p class="kpi-growth" style="color: #28a745">
+                        ↗ 12.3%
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">绿色物流指数</h5>
+                    <h3 class="kpi-value">68.5</h3>
+                    <p class="kpi-target">目标: 85.0</p>
+                    <p class="kpi-growth" style="color: #28a745">
+                        ↗ 15.2%
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">数字化程度</h5>
+                    <h3 class="kpi-value">78.0</h3>
+                    <p class="kpi-target">目标: 95.0</p>
+                    <p class="kpi-growth" style="color: #28a745">
+                        ↗ 22.1%
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+            </div>
+            
+            <hr class="section-divider">
+
+            <div class="row">
+                <!-- 区域1: 行业概况 -->
+                <div class="col-lg-12">
+                    <div class="card industry-overview">
+                        <div class="card-body">
+                            <h3><i class="fas fa-chart-line"></i> 行业概况</h3>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h5><i class="fas fa-dollar-sign"></i> 行业规模</h5>
+                                    <p>越南物流市场预计到2025年将达到<strong>450亿美元</strong>，年复合增长率超过<strong>15%</strong>。物流业占GDP比重持续上升，成为国民经济支柱产业之一。</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5><i class="fas fa-gavel"></i> 政策环境</h5>
+                                    <p>政府推出《2025年物流服务业发展战略》，投资<strong>150亿美元</strong>建设基础设施，简化海关流程，提供税收优惠，积极吸引外资参与。</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5><i class="fas fa-history"></i> 发展历程</h5>
+                                    <p>从传统运输服务发展为现代化综合物流体系，经历了数字化转型、供应链整合、智能化升级三个重要发展阶段。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 区域2: 运输方式分析 -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-truck"></i> 运输方式占比分析
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="82951bc3-5a48-44f4-9c00-eaf4aa77ad78" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("82951bc3-5a48-44f4-9c00-eaf4aa77ad78")) {                    Plotly.newPlot(                        "82951bc3-5a48-44f4-9c00-eaf4aa77ad78",                        [{"hole":0.3,"labels":["\u9646\u8fd0","\u6d77\u8fd0","\u7a7a\u8fd0","\u94c1\u8def"],"marker":{"colors":["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A"]},"textinfo":"label+percent","textposition":"outside","values":{"dtype":"i1","bdata":"QRQKBQ=="},"type":"pie"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":16},"text":"\u8fd0\u8f93\u65b9\u5f0f\u5360\u6bd4\u5206\u6790"},"font":{"color":"#000000"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff","height":400},                        {"responsive": true}                    )                };            </script>        </div>
+                            <div class="mt-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="alert alert-info">
+                                            <strong>陆运主导</strong><br>
+                                            占比65%，灵活性高，覆盖广泛
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="alert alert-success">
+                                            <strong>海运重要</strong><br>
+                                            占比20%，国际贸易主要方式
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 区域2补充: 运输方式对比 -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-balance-scale"></i> 运输方式成本与效率对比
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="2b41915e-d6b9-4326-b455-f81933cddbb2" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("2b41915e-d6b9-4326-b455-f81933cddbb2")) {                    Plotly.newPlot(                        "2b41915e-d6b9-4326-b455-f81933cddbb2",                        [{"marker":{"color":"#FF6B6B"},"name":"\u6210\u672c\u6307\u6570","x":["\u9646\u8fd0","\u6d77\u8fd0","\u7a7a\u8fd0","\u94c1\u8def"],"y":{"dtype":"i1","bdata":"SzxfRg=="},"type":"bar"},{"marker":{"color":"#4ECDC4"},"name":"\u6548\u7387\u6307\u6570","x":["\u9646\u8fd0","\u6d77\u8fd0","\u7a7a\u8fd0","\u94c1\u8def"],"y":{"dtype":"i1","bdata":"UEZfSw=="},"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":16},"text":"\u8fd0\u8f93\u65b9\u5f0f\u6210\u672c\u4e0e\u6548\u7387\u5bf9\u6bd4"},"font":{"color":"#000000"},"barmode":"group","paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff","height":400,"xaxis":{"title":{"text":"\u8fd0\u8f93\u65b9\u5f0f"}},"yaxis":{"title":{"text":"\u6307\u6570\u503c"}}},                        {"responsive": true}                    )                };            </script>        </div>
+                            <p class="mt-3 text-muted">
+                                <small><i class="fas fa-info-circle"></i> 
+                                空运效率最高但成本也最高，海运成本最低但效率相对较低，陆运在成本和效率间取得平衡。</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 区域3: 主要企业与竞争格局 -->
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-building"></i> 主要企业与竞争格局
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                                <div class="input-group" style="max-width: 300px;">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" id="table-search" class="form-control" placeholder="搜索企业名称...">
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <button id="comprehensive-index-btn" class="btn btn-primary">
+                                        <i class="fas fa-calculator"></i> 计算综合物流指数
+                                    </button>
+                                    <button id="sort-btn" class="btn btn-outline-primary">
+                                        <i class="fas fa-sort"></i> 排序
+                                    </button>
+                                    <button id="export-btn" class="btn btn-outline-primary">
+                                        <i class="fas fa-download"></i> 导出
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table border="1" class="dataframe table table-striped table-hover" id="company-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>企业名称</th>
+      <th>年运输量(万吨)</th>
+      <th>平均配送时长(小时)</th>
+      <th>服务区域数量</th>
+      <th>可再生能源比例(%)</th>
+      <th>回收材料比例(%)</th>
+      <th>客户满意度(%)</th>
+      <th>市场份额(%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Vietnam Post Logistics</td>
+      <td>500</td>
+      <td>24</td>
+      <td>63</td>
+      <td>20</td>
+      <td>40</td>
+      <td>85</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>Giaohangtietkiem</td>
+      <td>450</td>
+      <td>18</td>
+      <td>58</td>
+      <td>15</td>
+      <td>30</td>
+      <td>88</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Viettel Post</td>
+      <td>600</td>
+      <td>22</td>
+      <td>63</td>
+      <td>25</td>
+      <td>50</td>
+      <td>82</td>
+      <td>25</td>
+    </tr>
+    <tr>
+      <td>DHL Vietnam</td>
+      <td>700</td>
+      <td>16</td>
+      <td>45</td>
+      <td>35</td>
+      <td>60</td>
+      <td>92</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>Kuehne + Nagel Vietnam</td>
+      <td>550</td>
+      <td>20</td>
+      <td>50</td>
+      <td>30</td>
+      <td>55</td>
+      <td>87</td>
+      <td>15</td>
+    </tr>
+  </tbody>
+</table>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="alert alert-primary">
+                                            <h6><i class="fas fa-trophy"></i> 市场领导者</h6>
+                                            <p>DHL Vietnam以700万吨年运输量领先，客户满意度达92%</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-success">
+                                            <h6><i class="fas fa-leaf"></i> 绿色先锋</h6>
+                                            <p>DHL Vietnam可再生能源使用比例最高(35%)，引领绿色物流发展</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 区域3补充: 企业竞争力雷达图 -->
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-radar"></i> 企业综合竞争力对比
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="d32b150a-6a77-45c0-90ef-d6442b3321f8" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("d32b150a-6a77-45c0-90ef-d6442b3321f8")) {                    Plotly.newPlot(                        "d32b150a-6a77-45c0-90ef-d6442b3321f8",                        [{"fill":"toself","marker":{"color":"#FF6B6B"},"name":"Vietnam Post Logistics","r":[71.42857142857143,18,63,30.0,85],"theta":["\u8fd0\u8f93\u91cf","\u914d\u9001\u6548\u7387","\u670d\u52a1\u8986\u76d6","\u7eff\u8272\u6307\u6570","\u5ba2\u6237\u6ee1\u610f\u5ea6"],"type":"scatterpolar"},{"fill":"toself","marker":{"color":"#4ECDC4"},"name":"Giaohangtietkiem","r":[64.28571428571429,36,58,22.5,88],"theta":["\u8fd0\u8f93\u91cf","\u914d\u9001\u6548\u7387","\u670d\u52a1\u8986\u76d6","\u7eff\u8272\u6307\u6570","\u5ba2\u6237\u6ee1\u610f\u5ea6"],"type":"scatterpolar"},{"fill":"toself","marker":{"color":"#45B7D1"},"name":"Viettel Post","r":[85.71428571428571,24,63,37.5,82],"theta":["\u8fd0\u8f93\u91cf","\u914d\u9001\u6548\u7387","\u670d\u52a1\u8986\u76d6","\u7eff\u8272\u6307\u6570","\u5ba2\u6237\u6ee1\u610f\u5ea6"],"type":"scatterpolar"},{"fill":"toself","marker":{"color":"#FFA07A"},"name":"DHL Vietnam","r":[100.0,42,45,47.5,92],"theta":["\u8fd0\u8f93\u91cf","\u914d\u9001\u6548\u7387","\u670d\u52a1\u8986\u76d6","\u7eff\u8272\u6307\u6570","\u5ba2\u6237\u6ee1\u610f\u5ea6"],"type":"scatterpolar"},{"fill":"toself","marker":{"color":"#98D8C8"},"name":"Kuehne + Nagel Vietnam","r":[78.57142857142857,30,50,42.5,87],"theta":["\u8fd0\u8f93\u91cf","\u914d\u9001\u6548\u7387","\u670d\u52a1\u8986\u76d6","\u7eff\u8272\u6307\u6570","\u5ba2\u6237\u6ee1\u610f\u5ea6"],"type":"scatterpolar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"polar":{"radialaxis":{"visible":true,"range":[0,100]}},"title":{"font":{"size":16},"text":"\u4f01\u4e1a\u7efc\u5408\u7ade\u4e89\u529b\u5bf9\u6bd4"},"font":{"color":"#000000"},"showlegend":true,"paper_bgcolor":"#ffffff","height":500},                        {"responsive": true}                    )                };            </script>        </div>
+                            <p class="mt-3 text-muted">
+                                <small><i class="fas fa-lightbulb"></i> 
+                                雷达图展示了各企业在运输能力、配送效率、服务覆盖、绿色发展和客户满意度五个维度的综合表现。</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- 区域4: 绿色物流与可持续发展 -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-leaf"></i> 绿色物流与可持续发展的
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="300df9c2-31b4-4b89-bc9a-0999660d71dc" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("300df9c2-31b4-4b89-bc9a-0999660d71dc")) {                    Plotly.newPlot(                        "300df9c2-31b4-4b89-bc9a-0999660d71dc",                        [{"marker":{"color":["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A","#98D8C8"]},"name":"\u53ef\u518d\u751f\u80fd\u6e90","text":{"dtype":"f8","bdata":"AAAAAAAANEAAAAAAAAAuQAAAAAAAADlAAAAAAACAQUAAAAAAAAA+QA=="},"textposition":"auto","x":["Vietnam Post Logistics","Giaohangtietkiem","Viettel Post","DHL Vietnam","Kuehne + Nagel Vietnam"],"y":{"dtype":"i1","bdata":"FA8ZIx4="},"type":"bar"},{"marker":{"color":["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A","#98D8C8"]},"name":"\u56de\u6536\u6750\u6599","text":{"dtype":"f8","bdata":"AAAAAAAAREAAAAAAAAA+QAAAAAAAAElAAAAAAAAATkAAAAAAAIBLQA=="},"textposition":"auto","x":["Vietnam Post Logistics","Giaohangtietkiem","Viettel Post","DHL Vietnam","Kuehne + Nagel Vietnam"],"y":{"dtype":"i1","bdata":"KB4yPDc="},"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":16},"text":"\u4f01\u4e1a\u7eff\u8272\u7269\u6d41\u6307\u6807"},"font":{"color":"#000000"},"barmode":"group","paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff","height":400,"xaxis":{"title":{"text":"\u4f01\u4e1a\u540d\u79f0"}},"yaxis":{"title":{"text":"\u6bd4\u4f8b (%)"}}},                        {"responsive": true}                    )                };            </script>        </div>
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-recycle fa-2x text-success mb-2"></i>
+                                            <h5>平均回收率</h5>
+                                            <h3 class="text-success">47%</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-solar-panel fa-2x text-warning mb-2"></i>
+                                            <h5>平均绿色能源</h5>
+                                            <h3 class="text-warning">25%</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-target fa-2x text-info mb-2"></i>
+                                            <h5>2030年目标</h5>
+                                            <h3 class="text-info">60%</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 区域4补充: 区域分布 -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-map-marked-alt"></i> 区域分布
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="44c0ad6a-7d89-49c4-8e0c-58d16806fdd5" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("44c0ad6a-7d89-49c4-8e0c-58d16806fdd5")) {                    Plotly.newPlot(                        "44c0ad6a-7d89-49c4-8e0c-58d16806fdd5",                        [{"line":{"color":"#FF6B6B","width":3},"marker":{"size":8},"mode":"lines+markers","name":"\u7535\u5546\u7269\u6d41\u589e\u957f","x":{"dtype":"i2","bdata":"5AflB+YH5wfoBw=="},"y":{"dtype":"i1","bdata":"GSMtN0E="},"type":"scatter"},{"line":{"color":"#4ECDC4","width":3},"marker":{"size":8},"mode":"lines+markers","name":"\u8de8\u5883\u7269\u6d41\u5360\u6bd4","x":{"dtype":"i2","bdata":"5AflB+YH5wfoBw=="},"y":{"dtype":"i1","bdata":"DxIWHCM="},"type":"scatter"},{"line":{"color":"#45B7D1","width":3},"marker":{"size":8},"mode":"lines+markers","name":"\u667a\u80fd\u4ed3\u50a8\u666e\u53ca","x":{"dtype":"i2","bdata":"5AflB+YH5wfoBw=="},"y":{"dtype":"i1","bdata":"FBwmMDw="},"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":16},"text":"\u884c\u4e1a\u53d1\u5c55\u8d8b\u52bf\u5206\u6790"},"font":{"color":"#000000"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff","height":400,"xaxis":{"title":{"text":"\u5e74\u4efd"}},"yaxis":{"title":{"text":"\u767e\u5206\u6bd4 (%)"}}},                        {"responsive": true}                    )                };            </script>        </div>
+                            <div class="mt-3">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-star"></i> 南部地区leading</h6>
+                                    <p>胡志明市周边地区物流枢纽最多，年吞吐量最大</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 区域5: 技术应用与创新 -->
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-robot"></i> 技术应用与创新
+                        </div>
+                        <div class="card-body">
+                            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="036d1818-c9c5-4c88-b881-c68e2d2344f0" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("036d1818-c9c5-4c88-b881-c68e2d2344f0")) {                    Plotly.newPlot(                        "036d1818-c9c5-4c88-b881-c68e2d2344f0",                        [{"line":{"color":"#FF6B6B","width":3},"marker":{"size":8},"mode":"lines+markers","name":"\u4fe1\u606f\u5316\u666e\u53ca\u7387","x":{"dtype":"i2","bdata":"4gfjB+QH5QfmB+cH"},"y":{"dtype":"i1","bdata":"PEFLVVpf"},"type":"scatter"},{"line":{"color":"#4ECDC4","width":3},"marker":{"size":8},"mode":"lines+markers","name":"AI\u5e94\u7528","x":{"dtype":"i2","bdata":"4gfjB+QH5QfmB+cH"},"y":{"dtype":"i1","bdata":"Hig3RlBa"},"type":"scatter"},{"line":{"color":"#45B7D1","width":3},"marker":{"size":8},"mode":"lines+markers","name":"\u81ea\u52a8\u5316\u7a0b\u5ea6","x":{"dtype":"i2","bdata":"4gfjB+QH5QfmB+cH"},"y":{"dtype":"i1","bdata":"GSMtPEtV"},"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":16},"text":"\u7269\u6d41\u884c\u4e1a\u6280\u672f\u91c7\u7eb3\u8d8b\u52bf"},"font":{"color":"#000000"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff","height":400,"xaxis":{"title":{"text":"\u5e74\u4efd"}},"yaxis":{"title":{"text":"\u767e\u5206\u6bd4\u002f\u6307\u6570"}},"hovermode":"x unified"},                        {"responsive": true}                    )                };            </script>        </div>
+                            <div class="mt-4">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-cloud fa-2x text-primary mb-2"></i>
+                                            <h6>云计算应用</h6>
+                                            <p class="small">85%企业采用云服务</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-mobile-alt fa-2x text-success mb-2"></i>
+                                            <h6>移动应用</h6>
+                                            <p class="small">实时跟踪系统普及</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-brain fa-2x text-warning mb-2"></i>
+                                            <h6>AI优化</h6>
+                                            <p class="small">路径规划智能化</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3 border rounded">
+                                            <i class="fas fa-cube fa-2x text-info mb-2"></i>
+                                            <h6>区块链</h6>
+                                            <p class="small">供应链透明化</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-3">
+                                <i class="fas fa-info-circle text-info"></i> 
+                                信息化、数字化和AI技术正深刻改变越南物流业。自动化仓库、智能路径规划和实时货物跟踪系统显著提高了运营效率和客户满意度。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 区域6: 行业趋势与挑战 -->
+                <div class="col-lg-6">
+                    <div class="card trend-card">
+                        <div class="card-header">
+                            <i class="fas fa-rocket"></i> 未来发展趋势
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6><i class="fas fa-snowflake text-primary"></i> 冷链物流爆发</h6>
+                                <p class="small">随着生鲜电商和医药需求增长，冷链物流市场预计年增长率达25%</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-globe text-success"></i> 跨境电商物流</h6>
+                                <p class="small">越南制造业优势推动跨境电商出口，带动国际物流需求持续增长</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-microchip text-warning"></i> 智能物流升级</h6>
+                                <p class="small">5G、IoT、机器人技术将推动物流自动化率达到80%以上</p>
+                            </div>
+                            <div>
+                                <h6><i class="fas fa-handshake text-info"></i> 区域一体化</h6>
+                                <p class="small">RCEP实施促进区域物流一体化，跨境物流效率提升30%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card challenge-card">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-triangle"></i> 主要挑战与机遇
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6><i class="fas fa-road text-danger"></i> 基础设施瓶颈</h6>
+                                <p class="small">港口和道路网络需升级，预计投资需求达200亿美元</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-user-graduate text-warning"></i> 人才短缺</h6>
+                                <p class="small">现代物流管理人才缺口约5万人，急需专业培训和引进</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-shield-alt text-success"></i> 供应链韧性</h6>
+                                <p class="small">疫情暴露供应链脆弱性，多元化布局成为必然选择</p>
+                            </div>
+                            <div>
+                                <h6><i class="fas fa-leaf text-info"></i> 绿色转型压力</h6>
+                                <p class="small">碳中和目标要求物流行业加速绿色技术投资和转型</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const searchInput = document.getElementById('table-search');
+                const table = document.getElementById('company-table');
+                const tableRows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                let sortDirection = 'asc';
+
+                // 表格搜索功能
+                searchInput.addEventListener('keyup', function() {
+                    const filter = searchInput.value.toLowerCase();
+                    for (let i = 0; i < tableRows.length; i++) {
+                        let rowVisible = false;
+                        const cells = tableRows[i].getElementsByTagName('td');
+                        for (let j = 0; j < cells.length; j++) {
+                            if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                                rowVisible = true;
+                                break;
+                            }
+                        }
+                        tableRows[i].style.display = rowVisible ? '' : 'none';
+                    }
+                });
+
+                // 计算综合物流指数
+                document.getElementById('comprehensive-index-btn').addEventListener('click', function() {
+                    const headers = Array.from(table.getElementsByTagName('th')).map(th => th.textContent);
+                    if (headers.indexOf('综合物流指数') === -1) {
+                        const headerRow = table.getElementsByTagName('thead')[0].rows[0];
+                        const newHeader = document.createElement('th');
+                        newHeader.textContent = '综合物流指数';
+                        newHeader.style.background = 'linear-gradient(90deg, var(--secondary-color), var(--primary-color))';
+                        headerRow.appendChild(newHeader);
+                    }
+                    
+                    for (let i = 0; i < tableRows.length; i++) {
+                        const cells = tableRows[i].getElementsByTagName('td');
+                        const transportVolume = parseFloat(cells[1].textContent);
+                        const deliveryTime = parseFloat(cells[2].textContent);
+                        const serviceArea = parseFloat(cells[3].textContent);
+                        const greenEnergy = parseFloat(cells[4].textContent);
+                        const recycleRate = parseFloat(cells[5].textContent);
+                        const satisfaction = parseFloat(cells[6].textContent);
+
+                        // 综合物流指数计算（加权平均）
+                        const score = (
+                            (transportVolume / 700) * 25 +  // 运输量权重25%
+                            ((30 - deliveryTime) / 14) * 20 +  // 配送效率权重20%
+                            (serviceArea / 63) * 15 +  // 服务覆盖权重15%
+                            (greenEnergy / 100) * 20 +  // 绿色能源权重20%
+                            (recycleRate / 100) * 10 +  // 回收率权重10%
+                            (satisfaction / 100) * 10   // 客户满意度权重10%
+                        );
+                        
+                        let indexCell = tableRows[i].querySelector('.comprehensive-index');
+                        if (!indexCell) {
+                            indexCell = document.createElement('td');
+                            indexCell.classList.add('comprehensive-index');
+                            indexCell.style.fontWeight = 'bold';
+                            tableRows[i].appendChild(indexCell);
+                        }
+                        
+                        // 根据分数设置颜色
+                        if (score >= 80) {
+                            indexCell.style.color = '#27ae60';
+                        } else if (score >= 60) {
+                            indexCell.style.color = '#f39c12';
+                        } else {
+                            indexCell.style.color = '#e74c3c';
+                        }
+                        
+                        indexCell.textContent = score.toFixed(2);
+                    }
+                    
+                    // 显示成功消息
+                    this.innerHTML = '<i class="fas fa-check"></i> 计算完成';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-calculator"></i> 计算综合物流指数';
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-primary');
+                    }, 2000);
+                });
+
+                // 排序功能
+                document.getElementById('sort-btn').addEventListener('click', function() {
+                    const tbody = table.getElementsByTagName('tbody')[0];
+                    const rows = Array.from(tbody.getElementsByTagName('tr'));
+                    
+                    rows.sort((a, b) => {
+                        const aValue = parseFloat(a.cells[1].textContent); // 按运输量排序
+                        const bValue = parseFloat(b.cells[1].textContent);
+                        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+                    });
+                    
+                    rows.forEach(row => tbody.appendChild(row));
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    
+                    this.innerHTML = sortDirection === 'asc' ? '<i class="fas fa-sort-amount-up"></i> 升序' : '<i class="fas fa-sort-amount-down"></i> 降序';
+                });
+
+                // 导出功能（模拟）
+                document.getElementById('export-btn').addEventListener('click', function() {
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导出中...';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-check"></i> 导出完成';
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-success');
+                        
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-download"></i> 导出';
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline-primary');
+                        }, 2000);
+                    }, 1500);
+                });
+
+                // 添加表格行点击效果
+                for (let i = 0; i < tableRows.length; i++) {
+                    tableRows[i].addEventListener('click', function() {
+                        // 移除其他行的选中状态
+                        for (let j = 0; j < tableRows.length; j++) {
+                            tableRows[j].classList.remove('table-active');
+                        }
+                        // 添加当前行的选中状态
+                        this.classList.add('table-active');
+                    });
+                }
+            });
+        </script>
+    </body>
+    </html>
+    
